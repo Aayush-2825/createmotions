@@ -1,0 +1,252 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name          String
+  email         String   @unique
+  emailVerified Boolean
+  image         String?
+  role          UserRole @default(USER)
+
+  coinBalance Int @default(50)
+
+  referralCode String? @unique
+  referredById String?
+
+  referredBy User?  @relation("UserReferral", fields: [referredById], references: [id])
+  referrals  User[] @relation("UserReferral")
+
+  banned     Boolean?
+  banReason  String?
+  banExpires DateTime?
+
+  sessions Session[]
+  accounts Account[]
+
+  coinTransactions CoinTransaction[]
+  purchases        Purchase[]
+  adRewards        AdReward[]
+
+  referralsGiven    Referral[] @relation("Referrer")
+  referralsReceived Referral[] @relation("Referred")
+
+  resourcesCreated Resource[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expiresAt      DateTime
+  token          String   @unique
+  ipAddress      String?
+  userAgent      String?
+  impersonatedBy String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  identifier String
+  value      String
+  expiresAt  DateTime
+
+  @@index([identifier])
+  @@map("verifications")
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum ResourceType {
+  PROJECT_FILE
+  RESOURCE
+  INSPIRATION
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum CoinSource {
+  REFERRAL_REWARD
+  REFERRAL_BONUS
+  PURCHASE
+  ADMIN_ADJUSTMENT
+  AD_REWARD
+}
+
+enum PaymentType {
+  COINS
+  MONEY
+  BOTH
+}
+
+model Resource {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  title       String
+  slug        String       @unique
+  description String?
+  sections    SectionTag[]
+
+  type      ResourceType
+  fileUrl   String
+  thumbnail String?
+  videoUrl  String?
+
+  paymentType PaymentType
+  priceMoney  Float?      @default(0)
+  priceCoins  Int?        @default(0)
+  // discountMoney    Float?       @default(0)
+  // discountCoins    Int?         @default(0)
+  creatorId   String
+  creator     User        @relation(fields: [creatorId], references: [id])
+
+  isActive Boolean @default(true)
+  version  Int     @default(1)
+
+  purchases Purchase[]
+
+  @@index([creatorId])
+  @@index([deletedAt])
+}
+
+model SectionTag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resources Resource[]
+
+  @@index([slug])
+}
+
+model Referral {
+  id String @id @default(uuid())
+
+  referrerId String
+  referrer   User   @relation("Referrer", fields: [referrerId], references: [id])
+
+  referredUserId String @unique
+  referredUser   User   @relation("Referred", fields: [referredUserId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([referrerId])
+}
+
+model Purchase {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  archivedAt DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id])
+
+  paymentType PaymentType
+  status      PurchaseStatus @default(PENDING)
+
+  moneySpent Decimal?
+  coinsSpent Int?
+
+  @@unique([userId, resourceId])
+  @@index([userId])
+  @@index([archivedAt])
+}
+
+model CoinTransaction {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount Int
+  type   TransactionType
+  source CoinSource?
+
+  referenceId String?
+
+  @@index([userId])
+}
+
+model AdReward {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  adProvider String
+  rewardId   String @unique
+  coinsGiven Int
+}
