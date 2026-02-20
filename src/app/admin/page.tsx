@@ -6,6 +6,8 @@ import { getCurrentUser } from "@/lib/getUser";
 import { prisma } from "@/lib/prisma";
 import { AdminSkeleton } from "./loading";
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminPage() {
   return (
     <Suspense fallback={<AdminSkeleton />}>

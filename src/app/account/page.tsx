@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Settings, Shield, Lock } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default function Account() {
   return (
     <Suspense fallback={<AccountSkeleton />}>

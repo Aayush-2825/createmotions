@@ -7,6 +7,8 @@ import { mapUserToDashboardView } from "@/lib/mapper/user.mapper";
 import { getResourceById } from "@/lib/resource";
 import { DashboardSkeleton } from "./loading";
 
+export const dynamic = 'force-dynamic';
+
 export default function DashboardPage() {
   return (
     <Suspense fallback={<DashboardSkeleton />}>
