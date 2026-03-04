@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, useCallback } from "react";
-import { Coins, Layers, Search, PlayCircle } from "lucide-react";
+import { useMemo, useState, useCallback, useRef } from "react";
+import { Coins, Layers, Search, PlayCircle, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -77,11 +77,13 @@ const priceLabel = (item: Resource) => {
 function ResourceCard({ item }: { item: Resource }) {
   const [videoUnsupported, setVideoUnsupported] = useState(false);
   const [thumbError, setThumbError] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const playVideo = useCallback((video: HTMLVideoElement) => {
     const p = video.play();
     if (p && typeof p.catch === "function") {
-      p.catch(() => setVideoUnsupported(true));
+      p.catch(() => null);
     }
   }, []);
 
@@ -90,7 +92,17 @@ function ResourceCard({ item }: { item: Resource }) {
     video.currentTime = 0;
   }, []);
 
-  console.log(item)
+  const toggleAudio = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    setIsMuted((prevMuted) => {
+      const nextMuted = !prevMuted;
+      video.muted = nextMuted;
+      playVideo(video);
+      return nextMuted;
+    });
+  }, [playVideo]);
 
 
   const thumbnail =
@@ -103,9 +115,10 @@ function ResourceCard({ item }: { item: Resource }) {
         {item.videoUrl && !videoUnsupported ? (
           <div className="relative w-full h-full">
             <video
+              ref={videoRef}
               src={item.videoUrl}
-              className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-              muted
+              className="h-full w-full cursor-pointer object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+              muted={isMuted}
               loop
               playsInline
               preload="metadata"
@@ -113,11 +126,22 @@ function ResourceCard({ item }: { item: Resource }) {
               onError={() => setVideoUnsupported(true)}
               onMouseEnter={(e) => playVideo(e.currentTarget)}
               onMouseLeave={(e) => stopVideo(e.currentTarget)}
+              onClick={toggleAudio}
             />
 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
               <PlayCircle className="w-12 h-12 text-white/50" />
             </div>
+
+            <button
+              type="button"
+              onClick={toggleAudio}
+              className="absolute right-3 bottom-3 inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm"
+              aria-label={isMuted ? "Enable preview audio" : "Mute preview audio"}
+            >
+              {isMuted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
+              {isMuted ? "Sound off" : "Sound on"}
+            </button>
           </div>
         ) : (
           <Image
@@ -254,8 +278,7 @@ export default function ResourcesClient({
         items: filtered
           .filter((item) =>
             item.sections?.some((s) => s.id === section.id),
-          )
-          .slice(0, 4),
+          ),
       }))
       .filter((g) => g.items.length > 0);
 
