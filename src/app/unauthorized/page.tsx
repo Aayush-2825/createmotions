@@ -13,8 +13,8 @@ import {
 
 export default function UnauthorizedPage() {
   return (
-    <div className="flex min-h-[calc(100vh-96px)] items-center justify-center px-4 py-16 bg-white grid-surface">
-      <Empty className="border border-slate-200 bg-white/85 shadow-md shadow-slate-900/5">
+    <div className="flex min-h-[calc(100vh-96px)] items-center justify-center px-4 py-16 bg-[radial-gradient(circle_at_80%_20%,rgba(0,0,0,0.04),transparent_45%)]">
+      <Empty className="border bg-card/50">
         <EmptyMedia variant="icon">
           <ShieldOff className="size-6" />
         </EmptyMedia>
@@ -25,11 +25,11 @@ export default function UnauthorizedPage() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button asChild className="rounded-xl px-5">
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button asChild>
               <Link href="/dashboard">Go to dashboard</Link>
             </Button>
-            <Button variant="outline" asChild className="rounded-xl px-5 border-slate-200">
+            <Button variant="outline" asChild>
               <Link href="/">Back home</Link>
             </Button>
           </div>
