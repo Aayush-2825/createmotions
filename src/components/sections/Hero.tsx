@@ -12,7 +12,7 @@ export function Hero() {
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
       {/* Background Effects */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
         <div className="absolute inset-0 grid-surface opacity-30" />
         <motion.div
           animate={{
@@ -60,7 +60,7 @@ export function Hero() {
 
           {/* Heading */}
           <h1 className="max-w-6xl mx-auto text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.1]">
-            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary via-white to-purple-500 neon-text mb-4 pb-2">
+            <span className="block text-transparent bg-clip-text bg-linear-to-r from-primary via-white to-purple-500 neon-text mb-4 pb-2">
               CreateMotions
             </span>
             <span className="block text-white text-3xl md:text-5xl lg:text-6xl tracking-tight">

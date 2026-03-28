@@ -14,7 +14,7 @@ import { notFound, redirect } from "next/navigation";
 import { CoinsCheckoutForm } from "./CoinsCheckoutForm";
 import { CheckoutSkeleton } from "./loading";
 
-export const dynamic = 'force-dynamic';
+
 
 type PageProps = {
   params: { resourceId: string };

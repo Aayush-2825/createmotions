@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getResources } from "@/lib/resource";
 import { ProjectFilesSkeleton } from "./loading";
 
-export const revalidate = 60; // seconds
+
 
 export default function ResourcesPage() {
   return (

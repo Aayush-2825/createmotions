@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Settings, Shield, Lock } from "lucide-react";
 
-export const dynamic = 'force-dynamic';
+
 
 export default function Account() {
   return (
@@ -103,7 +103,7 @@ async function AccountContent() {
               </li>
               <li className="flex gap-3">
                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />
-                 Monitor referral rewards directly from your dashboard's wallet section.
+                 Monitor referral rewards directly from your dashboard&apos;s wallet section.
               </li>
               <li className="flex gap-3">
                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 shrink-0" />

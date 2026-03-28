@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, useCallback, useRef } from "react";
-import { Coins, Layers, Search, PlayCircle, Volume2, VolumeX } from "lucide-react";
+import { useMemo, useState, useCallback, useRef, useEffect } from "react";
+import { Coins, Layers, Search, PlayCircle, Volume2, VolumeX, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -78,7 +78,58 @@ function ResourceCard({ item }: { item: Resource }) {
   const [videoUnsupported, setVideoUnsupported] = useState(false);
   const [thumbError, setThumbError] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  // Fullscreen logic
+  const handleFullscreen = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.requestFullscreen) {
+      video.requestFullscreen();
+    } else if ((video as unknown as { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen) {
+      (video as unknown as { webkitRequestFullscreen: () => void }).webkitRequestFullscreen();
+    } else if ((video as unknown as { msRequestFullscreen?: () => void }).msRequestFullscreen) {
+      (video as unknown as { msRequestFullscreen: () => void }).msRequestFullscreen();
+    }
+  }, []);
+
+  // Listen for fullscreen change to update state and video quality
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const video = videoRef.current;
+    if (!video) return;
+    const onFullscreenChange = () => {
+      const doc = document as Document & {
+        webkitFullscreenElement?: Element | null;
+        msFullscreenElement?: Element | null;
+      };
+      const isNowFullscreen =
+        doc.fullscreenElement === video ||
+        doc.webkitFullscreenElement === video ||
+        doc.msFullscreenElement === video;
+      setIsFullscreen(isNowFullscreen);
+      if (isNowFullscreen) {
+        video.classList.remove("object-cover");
+        video.classList.add("object-contain");
+        video.controls = true;
+        video.muted = false;
+      } else {
+        video.classList.remove("object-contain");
+        video.classList.add("object-cover");
+        video.controls = false;
+        video.muted = isMuted;
+      }
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    document.addEventListener("MSFullscreenChange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+      document.removeEventListener("MSFullscreenChange", onFullscreenChange);
+    };
+  }, [isMuted]);
 
   const playVideo = useCallback((video: HTMLVideoElement) => {
     const p = video.play();
@@ -104,7 +155,6 @@ function ResourceCard({ item }: { item: Resource }) {
     });
   }, [playVideo]);
 
-
   const thumbnail =
     !thumbError && item.thumbnail ? item.thumbnail : "/logo.png";
 
@@ -117,12 +167,12 @@ function ResourceCard({ item }: { item: Resource }) {
             <video
               ref={videoRef}
               src={item.videoUrl}
-              className="h-full w-full cursor-pointer object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+              className={`h-full w-full cursor-pointer opacity-80 group-hover:opacity-100 transition-opacity object-cover`}
               muted={isMuted}
               loop
               playsInline
               preload="metadata"
-              poster={item.thumbnail ?? undefined}
+              poster={!isFullscreen ? item.thumbnail ?? undefined : undefined}
               onError={() => setVideoUnsupported(true)}
               onMouseEnter={(e) => playVideo(e.currentTarget)}
               onMouseLeave={(e) => stopVideo(e.currentTarget)}
@@ -132,6 +182,17 @@ function ResourceCard({ item }: { item: Resource }) {
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
               <PlayCircle className="w-12 h-12 text-white/50" />
             </div>
+
+            {/* Fullscreen button */}
+            <button
+              type="button"
+              onClick={handleFullscreen}
+              className="absolute left-3 bottom-3 inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-black/60 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm"
+              aria-label="Fullscreen preview"
+              tabIndex={0}
+            >
+              <Maximize2 className="size-3.5" /> Fullscreen
+            </button>
 
             <button
               type="button"
@@ -291,14 +352,14 @@ export default function ResourcesClient({
 
 
   return (
-    <div className="min-h-screen bg-background px-4 py-20 pb-32">
+    <div className="min-h-screen bg-background px-4 py-20 pb-32 scroll-smooth">
       <div className="mx-auto max-w-7xl space-y-12">
         {/* Header */}
         <div className="space-y-4 max-w-4xl pt-10">
           <h1 className="text-4xl sm:text-6xl font-black leading-tight text-white">
             Curated Assets for
             <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-purple-500">
               Viral Creators
             </span>
           </h1>
@@ -321,7 +382,7 @@ export default function ResourcesClient({
           </div>
 
           <Select value={sort} onValueChange={setSort}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-50">
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
             <SelectContent>
