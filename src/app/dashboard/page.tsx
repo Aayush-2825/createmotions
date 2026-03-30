@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/getUser";
 import Dashboard from "./Dashboard";
 import { prisma } from "@/lib/prisma";
 import { mapUserToDashboardView } from "@/lib/mapper/user.mapper";
-import { getResourceById } from "@/lib/resource";
+import { getResourceById, getResourceByIdAdmin } from "@/lib/resource";
 import { DashboardSkeleton } from "./loading";
 
 
@@ -44,7 +44,12 @@ async function DashboardContent() {
     resourcesCreatedCount,
   });
 
-  const resources = await getResourceById(user.id,user.role==='ADMIN')
+  let resources;
+  if (user.role === 'ADMIN') {
+    resources = await getResourceByIdAdmin(user.id);
+  } else {
+    resources = await getResourceById(user.id, false);
+  }
 
 
   return <Dashboard user={user} resources={resources} />;

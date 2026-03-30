@@ -1,3 +1,34 @@
+// Admin-only: get all resources created by admin, including fileUrl
+export async function getResourceByIdAdmin(userId: string) {
+  try {
+    const resources = await prisma.resource.findMany({
+      where: { creatorId: userId, deletedAt: null },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        type: true,
+        priceMoney: true,
+        priceCoins: true,
+        thumbnail: true,
+        videoUrl: true,
+        fileUrl: true,
+        isActive: true,
+        sections: {
+          select: { id: true, name: true, slug: true },
+        },
+      },
+    });
+    return resources.map((resource) => ({
+      ...resource,
+      videoUrl: sanitizeVideoUrl(resource.videoUrl),
+      paymentType: derivePaymentType(resource.priceCoins, resource.priceMoney),
+    }));
+  } catch (error) {
+    console.error("Error fetching admin resources by ID:", error);
+    return [];
+  }
+}
 import { prisma } from "@/lib/prisma";
 
 type PaymentTypeView = "COINS" | "MONEY" | "BOTH";
