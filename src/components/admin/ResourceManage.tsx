@@ -168,6 +168,10 @@ export const ResourceManage = ({ resource }: { resource: AdminResource[] }) => {
           );
           toast.success("Resource updated");
           closeEdit();
+        } else if (result?.error) {
+          toast.error(result.error);
+        } else {
+          toast.error("Failed to update resource");
         }
       });
     });
