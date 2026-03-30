@@ -61,15 +61,18 @@ export async function updateResource(resourceId: string, formData: FormData) {
       return { error: "Resource not found" } as const;
     }
 
+    // Only update sections if provided and non-empty, else leave unchanged
+    let updateData: any = { ...restData };
+    if (Array.isArray(sections) && sections.length > 0) {
+      updateData.sections = {
+        set: [],
+        connect: sections.map((sectionId: string) => ({ id: sectionId })),
+      };
+    }
+
     const updated = await prisma.resource.update({
       where: { id: resourceId },
-      data: {
-        ...restData,
-        sections: {
-          set: [],
-          connect: sections.map((sectionId: string) => ({ id: sectionId })),
-        },
-      },
+      data: updateData,
       include: {
         sections: {
           select: { id: true, name: true, slug: true },
