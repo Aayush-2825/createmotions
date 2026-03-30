@@ -1,6 +1,15 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+// Simple URL validation
+function isValidUrl(url: string) {
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -103,16 +112,13 @@ export const ResourceManage = ({ resource }: { resource: AdminResource[] }) => {
   const [editForm, setEditForm] = useState<EditForm | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+
   const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [thumbnailPreviewBroken, setThumbnailPreviewBroken] = useState(false);
-
-  const [uploadedThumbnailName, setUploadedThumbnailName] = useState<
-    string | null
-  >(null);
-  const [uploadedVideoName, setUploadedVideoName] = useState<string | null>(
-    null,
-  );
+  const [uploadedThumbnailName, setUploadedThumbnailName] = useState<string | null>(null);
+  const [uploadedVideoName, setUploadedVideoName] = useState<string | null>(null);
+  const [fileUrlError, setFileUrlError] = useState<string | null>(null);
 
   const isUploading = isUploadingThumbnail || isUploadingVideo;
 
@@ -151,6 +157,13 @@ export const ResourceManage = ({ resource }: { resource: AdminResource[] }) => {
     if (isUploading) {
       toast.warning("Please wait for uploads to finish.");
       return;
+    }
+    // Validate fileUrl
+    if (!editForm.fileUrl || !isValidUrl(editForm.fileUrl)) {
+      setFileUrlError("A valid File URL is required.");
+      return;
+    } else {
+      setFileUrlError(null);
     }
 
     const formData = new FormData();
@@ -411,10 +424,19 @@ export const ResourceManage = ({ resource }: { resource: AdminResource[] }) => {
                   <Input
                     id="fileUrl"
                     value={editForm.fileUrl}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, fileUrl: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setEditForm({ ...editForm, fileUrl: e.target.value });
+                      if (!e.target.value || !isValidUrl(e.target.value)) {
+                        setFileUrlError("A valid File URL is required.");
+                      } else {
+                        setFileUrlError(null);
+                      }
+                    }}
+                    className={fileUrlError ? "border-red-500" : ""}
                   />
+                  {fileUrlError && (
+                    <div className="text-xs text-red-500">{fileUrlError}</div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
