@@ -1,6 +1,11 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+// Helper to get unique file URLs from all resources
+function getUniqueFileUrls(items: { fileUrl: string }[]): string[] {
+  const urls = items.map((item) => item.fileUrl).filter(Boolean);
+  return Array.from(new Set(urls));
+}
 // Simple URL validation
 function isValidUrl(url: string) {
   try {
@@ -423,8 +428,9 @@ export const ResourceManage = ({ resource }: { resource: AdminResource[] }) => {
                   <Label htmlFor="fileUrl">File URL</Label>
                   <Input
                     id="fileUrl"
-                    value={editForm.fileUrl}
+                    value={editForm?.fileUrl ?? ""}
                     onChange={(e) => {
+                      if (!editForm) return;
                       setEditForm({ ...editForm, fileUrl: e.target.value });
                       if (!e.target.value || !isValidUrl(e.target.value)) {
                         setFileUrlError("A valid File URL is required.");
@@ -437,6 +443,32 @@ export const ResourceManage = ({ resource }: { resource: AdminResource[] }) => {
                   {fileUrlError && (
                     <div className="text-xs text-red-500">{fileUrlError}</div>
                   )}
+                  {/* Pre-submitted file URLs */}
+                  {(() => {
+                    const urls = getUniqueFileUrls(items).filter((url) => editForm && url && url !== editForm.fileUrl);
+                    if (urls.length === 0) return null;
+                    return (
+                      <div className="pt-1">
+                        <div className="text-xs text-neutral-400 mb-1">Previously submitted URLs:</div>
+                        <div className="flex flex-wrap gap-2">
+                          {urls.map((url) => (
+                            <button
+                              key={url}
+                              type="button"
+                              className="px-2 py-1 rounded bg-neutral-800 text-xs text-blue-400 border border-blue-400/30 hover:bg-blue-900 transition"
+                              onClick={() => {
+                                if (!editForm) return;
+                                setEditForm({ ...editForm, fileUrl: url });
+                                setFileUrlError(null);
+                              }}
+                            >
+                              {url.length > 32 ? url.slice(0, 32) + "..." : url}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-2">
